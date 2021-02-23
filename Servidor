@@ -1,0 +1,107 @@
+package servidor;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import static jdk.nashorn.tools.ShellFunctions.input;
+
+/* 1 - Criar o Servidor de Conexóes
+   2 - Esperar o pedido de conexão;
+   Outro processo
+   2.1 Criar uma nova conexão;
+   3 - Criar Streams de entrada e saída
+   4 - Tratar a conversão entre cliente e servidor (tratar protocolor);
+   4.1 Fechar Socket de comunicação entre servidor/cliente;
+   4.2 Fechar streams de entrada e saída;
+   5 - Voltar para o passo 2, até finalizar o programa;
+   6 - fechar serverSocket
+*/
+
+
+/**
+ *
+ * @author Thyago Sobreira
+ */
+public class Servidor {
+    
+    
+    private ServerSocket serverSocket; // cria o servidor
+    
+    private void criarServerSocket(int porta) throws IOException
+    {
+        serverSocket = new ServerSocket(porta);
+    }
+    
+    private Socket aguardarConexao () throws IOException // espera a conecção e cria o socket
+    {
+    
+        Socket socket = serverSocket.accept();
+        return socket;
+        
+    }
+    
+    private void fechaSocket (Socket s) throws IOException //4.1 Fechar Socket de comunicação entre servidor/cliente;
+    {
+    s.close();
+    }
+    
+    private void trataConexao (Socket socket) throws IOException
+    {
+        //protocolor de aplicação
+        /*
+         3- Criar Streams de entrada e saída
+        */
+        try{
+            
+        
+        ObjectOutputStream output = new ObjectOutputStream ( socket.getOutputStream());
+        ObjectInputStream input = new ObjectInputStream ( socket.getInputStream());
+        
+        /*Protocolor
+        4 - Tratar a conversão entre cliente e servidor (tratar protocolor);
+        Cliente ---> Hello
+         Server <--- Hellor World!
+        */
+        
+        String msg = input.readUTF();
+        System.out.println("mensagem Recebida " + msg);
+        output.writeUTF("Hello Word !");
+        output.flush();
+        
+        //4.2 Fechar streams de entrada e saída;
+        input.close();;
+        output.close();
+        } catch (IOException e ){
+            //tratamento de falhas
+        }finally {
+            
+            //final do tratamento do protocolor
+            //4.1 Fechar Socket de comunicação entre servidor/cliente;
+            fechaSocket (socket);
+            
+        }
+        
+        fechaSocket(socket);
+        
+                
+    }
+    
+ 
+    
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) throws IOException {
+        
+        Servidor servidor = new Servidor (); // criou o servidor
+        System.out.println("Aguardando conexão...");
+        servidor.criarServerSocket(5555); // passou a porta de acesso 
+        Socket socket = servidor.aguardarConexao(); // aguarda a conecao tem que haver um protocolor para entendimento
+        System.out.println("Cliente Conectado. ");
+        servidor.trataConexao(socket); // trata conexão
+        System.out.println("Cliente finalizado. ");
+    }
+    
+}
